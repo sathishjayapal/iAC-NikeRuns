@@ -7,8 +7,8 @@ terraform {
   }
 }
 provider "azurerm" {
-  subscription_id = "b43c969f-b5f5-42ce-a1f3-57886e9935b2"
-  tenant_id       = "3c44a19d-2993-4b1d-868e-3c7bcf63bc60"
+  subscription_id = ""
+  tenant_id       = ""
   client_id       = ""
   features {}
 }
@@ -27,7 +27,7 @@ resource "azurerm_storage_account" "storage_resource_defn" {
   name                     = "sathishrunstorageaccount"
   resource_group_name      = local.rg_name
   account_kind             = "StorageV2"
-  depends_on               = [
+  depends_on = [
     azurerm_resource_group.rg_resource_defn
   ]
 }
