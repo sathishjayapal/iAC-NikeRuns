@@ -13,22 +13,21 @@ provider "azurerm" {
   features {}
 }
 locals {
-  base_name   = "sathish"
-  rg_name     = "${local.base_name}_config_sever_rg"
-  region_name = "East US 2"
+  base_name = "sathish"
+  rg_name   = "${local.base_name}_config_sever_rg"
 }
 resource "azurerm_resource_group" "rg_resource_defn" {
-  location = local.region_name
+  location = "East US 2"
   name     = local.rg_name
 }
 resource "azurerm_storage_account" "storage_resource_defn" {
   account_replication_type = "LRS"
   account_tier             = "Standard"
-  location                 = local.region_name
+  location                 = "East US 2"
   name                     = "sathishrunstorageaccount"
   resource_group_name      = local.rg_name
   account_kind             = "StorageV2"
-  depends_on = [
+  depends_on               = [
     azurerm_resource_group.rg_resource_defn
   ]
 }
