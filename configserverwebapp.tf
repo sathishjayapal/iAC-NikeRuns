@@ -22,11 +22,10 @@ resource "azurerm_container_app" "container_app" {
   container_app_environment_id = azurerm_container_app_environment.container_app_environment.id
   resource_group_name          = local.rg_name
   revision_mode                = "Single"
-
   template {
     container {
       name   = "${local.base_name}runsapp"
-      image  = "dockerhub.io/sathishjatdot/sathishprojects_config_server:latest"
+      image  = "sathishjatdot/sathishprojects_config_server:latest"
       cpu    = 0.25
       memory = "0.5Gi"
     }
