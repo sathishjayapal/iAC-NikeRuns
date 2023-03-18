@@ -27,7 +27,7 @@ resource "azurerm_storage_container" "storage_container_defn" {
 resource "azurerm_storage_blob" "storage_blob_defn" {
   name                   = "main.tf"
   storage_account_name   = "${local.base_name}runstorageaccount"
-  storage_container_name = "${local.base_name}blobcontainer"
+  storage_container_name = "${local.base_name}runblobcontainer"
   type                   = "Block"
   source                 = "main.tf"
   depends_on             = [azurerm_storage_container.storage_container_defn]
