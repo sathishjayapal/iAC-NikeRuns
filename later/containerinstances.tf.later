@@ -21,7 +21,7 @@ resource "azurerm_container_group" "container" {
   }
   container {
     name   = "${var.base_name}-${random_string.container_name.result}"
-    image  = var.image
+    image  = var.dockerimageforconfigserver
     cpu    = var.cpu_cores
     memory = var.memory_in_gb
 
