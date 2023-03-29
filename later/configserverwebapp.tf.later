@@ -1,16 +1,6 @@
-resource "azurerm_log_analytics_workspace" "log_analytics_workspace" {
-  name                = "acctest-01"
-  location            = local.location
-  resource_group_name = local.rg_name
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-  depends_on = [
-    azurerm_storage_blob.storage_blob_defn
-  ]
-}
 resource "azurerm_container_app_environment" "container_app_environment" {
-  name                       = "${local.base_name}Environment"
-  location                   = local.location
+  name                       = "containerappenvironment"
+  location                   = local.location2
   resource_group_name        = local.rg_name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.log_analytics_workspace.id
   depends_on = [
@@ -22,12 +12,27 @@ resource "azurerm_container_app" "container_app" {
   container_app_environment_id = azurerm_container_app_environment.container_app_environment.id
   resource_group_name          = local.rg_name
   revision_mode                = "Single"
-  template {
-    container {
-      name   = "${local.base_name}runsapp"
-      image  = "sathishjatdot/sathishprojects_config_server:latest"
-      cpu    = 0.25
-      memory = "0.5Gi"
+  ingress{
+    allow_insecure_connections = true
+    external_enabled = true
+    target_port = 80
+    traffic_weight {
+      percentage = 100
     }
   }
+  template {
+
+    container {
+      name   = "${local.base_name}runsapp"
+      image  = "docker.io/sathishjatdot/sathishprojects_config_server:latest"
+      cpu    = 1.0
+      memory = "2Gi"
+
+    }
+    min_replicas = 1
+    max_replicas = 3
+  }
+  depends_on = [
+    azurerm_container_app_environment.container_app_environment
+  ]
 }

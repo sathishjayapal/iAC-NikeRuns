@@ -57,7 +57,7 @@ variable "log_retention_days" {
 
 #End Log related properties
 
-#Container related properties
+#Container Apps related properties
 variable "image" {
   type        = string
   description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
@@ -98,3 +98,22 @@ variable "restart_policy" {
   }
 }
 #End Container related properties
+
+#AppService properties
+variable "dockerimagewithurl" {
+  type        = string
+  description = "Full URL for the docker image used in app service"
+}
+variable "dockerimagetag" {
+  type        = string
+  description = "tag name"
+  default     = "latest"
+}
+variable "appservice-ostype" {
+  type        = string
+  description = "Type of ostype to be used in app service"
+}
+variable "appservice-sku" {
+  type        = string
+  description = "Type of sku to be used in app service"
+}
