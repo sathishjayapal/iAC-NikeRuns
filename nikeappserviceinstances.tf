@@ -9,7 +9,7 @@ resource "azurerm_service_plan" "sathish-appserviceplan" {
 
 
 resource "azurerm_linux_web_app" "sathishnikerunswebapp" {
-  name                = "sathishconfigserverwebapp"
+  name                = "sathishnikerunswebapp"
   resource_group_name = azurerm_resource_group.rg_resource_defn.name
   location            = azurerm_service_plan.sathish-appserviceplan.location
   service_plan_id     = azurerm_service_plan.sathish-appserviceplan.id
