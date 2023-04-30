@@ -6,6 +6,7 @@ variable "tenant_id" {
 variable "base_name" {
   type      = string
   sensitive = true
+  default   = "Sathish"
 }
 variable "subscription_id" {
   type      = string
