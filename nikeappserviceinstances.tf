@@ -1,5 +1,5 @@
 resource "azurerm_service_plan" "sathish-appserviceplan" {
-  name                = "sathish-appserviceplan"
+  name                = "${var.base_name}-appserviceplan"
   location            = azurerm_resource_group.rg_resource_defn.location
   resource_group_name = azurerm_resource_group.rg_resource_defn.name
   os_type             = var.appservice-ostype
@@ -9,7 +9,7 @@ resource "azurerm_service_plan" "sathish-appserviceplan" {
 
 
 resource "azurerm_linux_web_app" "sathishnikerunswebapp" {
-  name                = "sathishnikerunswebapp"
+  name                = "${var.base_name}nikerunswebapp"
   resource_group_name = azurerm_resource_group.rg_resource_defn.name
   location            = azurerm_service_plan.sathish-appserviceplan.location
   service_plan_id     = azurerm_service_plan.sathish-appserviceplan.id
