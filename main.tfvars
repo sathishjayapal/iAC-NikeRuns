@@ -1,13 +1,13 @@
 #Base names
 base_name        = "sathish"
 tenant_id  = "84f1e4ea-8554-43e1-8709-f0b8589ea118"
-subscription_id = "0cfe2870-d256-4119-b0a3-16293ac11bdc"
+subscription_id = "28e1e42a-4438-4c30-9a5f-7d7b488fd883"
 timeout_min      = "30m"
 timeout_delete   = "2h"
 primary_location = "South Central US"
 
 #Resource Group Variables
-rg_name = "1-c6ffc9f1-playground-sandbox"
+rg_name = "1-3b7cf225-playground-sandbox"
 prefix  = "test"
 environment = "dev"
 #Log related properties
@@ -46,4 +46,9 @@ configServerpass = "pass"
 #Common docker registry attributes
 docker_registry_server_url = "docker.io"
 docker_registry_server_username = "travelhelper0h"
-docker_registry_server_password = "pass"
+docker_registry_server_password = "dckr_pat_OKaYR_PWGTejmPSrPcBwBqIdcZc"
+
+ip_rules= {
+  allhosts = "0.0.0.0"
+  selfhost = "127.0.0.1"
+}

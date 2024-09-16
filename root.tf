@@ -47,6 +47,13 @@ module "loganalyticsmodule" {
   log_retention_days = var.log_retention_days
   log_sku            = var.log_sku
 }
+module "flexipostgresmodule" {
+  source  = "./modules/PostgreSQL"
+  primary_location = var.primary_location
+  rg_name = var.rg_name
+  prefix                          = var.prefix
+  main_group_name                 = var.main_group_name
+}
 
 # Configure the Azure provider
 provider "azurerm" {
