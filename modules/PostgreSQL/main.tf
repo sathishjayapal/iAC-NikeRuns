@@ -12,6 +12,7 @@ resource azurerm_postgresql_flexible_server "sathishdb-server" {
 resource "azurerm_postgresql_flexible_server_firewall_rule" "sathishdbfw" {
     name             = "sathishdb-fw"
     server_id        = azurerm_postgresql_flexible_server.sathishdb-server.id
-    start_ip_address = "134.215.150.123"
-    end_ip_address   = "134.215.150.123"
+    start_ip_address = "0.0.0.0"
+    end_ip_address   = "255.255.255.255"
 }
+
