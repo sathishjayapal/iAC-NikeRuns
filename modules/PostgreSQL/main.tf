@@ -4,7 +4,7 @@ resource azurerm_postgresql_flexible_server "sathishdb-server" {
     location            = "EASTUS"
     sku_name            = var.sku_name
     storage_mb          = var.storage_mb
-    administrator_password = "pas$word1234"
+    administrator_password = ""
     backup_retention_days = var.backup_retention_days
     administrator_login = var.administrator_login
     version = var.postgresql_version

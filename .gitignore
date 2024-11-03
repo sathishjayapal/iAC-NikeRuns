@@ -1,1 +1,11 @@
 /iAC-NikeRuns.iml
+
+.terraform/
+
+.terraform.lock.hcl
+
+aws-modules/terraform.tfstate
+
+aws-modules/terraform.tfstate.backup
+
+terraform.tfstate
