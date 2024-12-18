@@ -1,13 +1,13 @@
 #Base names
 base_name        = "sathish"
 tenant_id  = "84f1e4ea-8554-43e1-8709-f0b8589ea118"
-subscription_id = "60fa19b5-126a-4319-a9a3-93095ac486c1"
+subscription_id = "0cfe2870-d256-4119-b0a3-16293ac11bdc"
 timeout_min      = "30m"
 timeout_delete   = "2h"
 primary_location = "South Central US"
 
 #Resource Group Variables
-rg_name = "925-5660c624-azure-ai-sandbox"
+rg_name = "1-37e7afcc-playground-sandbox"
 prefix  = "test"
 environment = "dev"
 #Log related properties
