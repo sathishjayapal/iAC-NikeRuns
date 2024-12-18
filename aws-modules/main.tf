@@ -3,6 +3,10 @@ resource "aws_instance" "web" {
   instance_type = "t3.micro"
   user_data              = filebase64("scripts/user_data.sh")
   vpc_security_group_ids = [aws_security_group.allow_http.id]
+  key_name = "formypc"
+  tags = {
+    Name = "web"
+  }
 }
 
 data "aws_ami" "this" {
@@ -23,7 +27,7 @@ data "aws_vpc" "this" {
 }
 
 resource "aws_security_group" "allow_http" {
-  name        = "allow_http"
+  name        = "allow_httpandssh"
   description = "Allow HTTP inbound traffic"
   vpc_id      = data.aws_vpc.this.id
 
