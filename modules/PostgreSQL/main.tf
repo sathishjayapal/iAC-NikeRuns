@@ -1,7 +1,7 @@
 resource azurerm_postgresql_flexible_server "sathishdb-server" {
     name                = join("", [var.prefix, var.main_group_name, "postgres"])
     resource_group_name = var.rg_name
-    location            = "EASTUS"
+    location            = var.primary_location
     sku_name            = var.sku_name
     storage_mb          = var.storage_mb
     administrator_password = var.administrator_login_password

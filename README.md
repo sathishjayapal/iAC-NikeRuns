@@ -16,6 +16,10 @@
   * To run the terraform code for Azure sandbox
     * terraform init
     * terraform apply -var-file="main.tfvars"
+## Verify the resources all this in main.tfvars
+    * tenant_id  = ""
+    * subscription_id = ""
+    * resource group name = ""        
 
 ## Commands to run confiserverwebappservice
 * terraform init
