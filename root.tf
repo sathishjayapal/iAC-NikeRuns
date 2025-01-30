@@ -54,6 +54,22 @@ module "flexipostgresmodule" {
   prefix                          = var.prefix
   main_group_name                 = var.main_group_name
 }
+module "eventgridmodule" {
+  source = "./modules/eventgrid"
+  rg-name = var.rg_name
+  primary_location = var.primary_location
+  prefix = var.prefix
+  main_group_name = var.main_group_name
+}
+
+module "servicebusmodule" {
+  source = "./modules/service-bus"
+  rg-name = var.rg_name
+  primary_location = var.primary_location
+  prefix = var.prefix
+  main_group_name = var.main_group_name
+}
+
 
 # Configure the Azure provider
 provider "azurerm" {
