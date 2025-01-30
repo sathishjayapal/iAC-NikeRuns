@@ -1,13 +1,13 @@
 #Base names
 base_name        = "sathish"
 tenant_id  = "84f1e4ea-8554-43e1-8709-f0b8589ea118"
-subscription_id = "0cfe2870-d256-4119-b0a3-16293ac11bdc"
+subscription_id = "9734ed68-621d-47ed-babd-269110dbacb1"
 timeout_min      = "30m"
 timeout_delete   = "2h"
 primary_location = "South Central US"
 
 #Resource Group Variables
-rg_name = "1-37e7afcc-playground-sandbox"
+rg_name = "1-6f5d156a-playground-sandbox"
 prefix  = "test"
 environment = "dev"
 #Log related properties
