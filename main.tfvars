@@ -7,7 +7,7 @@ timeout_delete   = "2h"
 primary_location = "South Central US"
 
 #Resource Group Variables
-rg_name = "1-6f5d156a-playground-sandbox"
+rg_name = "1-5157de3d-playground-sandbox"
 prefix  = "test"
 environment = "dev"
 #Log related properties
@@ -31,7 +31,7 @@ main_group_name = "sathisprj1"
 account_tier = "Standard"
 account_replication_type = "GRS"
 account_kind = "StorageV2"
-# storage contai                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ner attributes
+# storage container                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ner attributes
 container_access_type = "blob"
 
 #Container Instances attributes
@@ -42,6 +42,10 @@ configServerport = 8888
 configServerprotocol = "TCP"
 configServerusername = "sathish"
 configServerpass = "pass"
+appserviceport = 8888
+git_uri = "find ur git"
+encrypt_key = "find ur encrypt key"
+jar_file ="sathishconfigserver.jar"
 
 #Common docker registry attributes
 docker_registry_server_url = "docker.io"

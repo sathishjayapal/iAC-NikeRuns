@@ -135,6 +135,26 @@ variable "configServerpass" {
   description = "The password to use for the container."
   nullable    = false
 }
+variable "appserviceport" {
+  type        = string
+  description = "The port to use for the container."
+  nullable    = false
+}
+variable "git_uri" {
+  type        = string
+  description = "The git url to use for the container."
+  nullable    = false
+}
+variable "encrypt_key" {
+  type        = string
+  description = "The encrypt key to use for the container."
+  nullable    = false
+}
+variable "jar_file" {
+  type        = string
+  description = "The jar file name use for the container."
+  nullable    = false
+}
 variable "docker_registry_server_url" {
   type        = string
   description = "The URL of the Docker registry server."
