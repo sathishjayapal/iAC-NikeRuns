@@ -23,7 +23,7 @@
 
 ## Commands to run confiserverwebappservice
 * terraform init
-* terraform apply -var-file="main.tfvars"
+* terraform apply -var-file="main.tfvars" -auto-approve
 * terraform plan -var-file="main.tfvars"
 * terraform destroy -var-file="main.tfvars"
 ## Things to remember
