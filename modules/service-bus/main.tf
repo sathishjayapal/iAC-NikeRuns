@@ -1,8 +1,8 @@
 resource "azurerm_servicebus_namespace" "servicebus_namespace" {
-  name                = join("", [var.prefix, var.main_group_name, "servicebus-namespace"])
+  name                = join("", [var.prefix, var.main_group_name, "sbnamespace"])
   location            = var.primary_location
   resource_group_name = var.rg-name
-  sku                 = "Standard"
+  sku                 = "Basic"
 
   tags = {
     source = "terraform"

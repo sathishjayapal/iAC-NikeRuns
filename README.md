@@ -39,3 +39,12 @@
 * chmod 700 formypc.pem
 
 
+## Terraform changes
+* When introducing an envrionment variable, make sure to add it to the variables.tf file and pass it to the module.
+* For example, in the configserver module, we have added the environment variable for the jar file name
+* Check the Dockerfile for the configserver module to see how the environment variable is used.
+* Now let us start from the top here. We have root-varaibles.tf file that has the variables that are passed to the modules. Add the entry for the Jar file
+* Next add the value entry in main.tfvars file.
+* Goto the modules folder and add the variable in the variables.tf file.
+* Change the main.tf file to use the variable.
+

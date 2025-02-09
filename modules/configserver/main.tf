@@ -19,6 +19,10 @@ resource "azurerm_container_group" "container_config_group" {
     environment_variables = {
       "username" = var.configServerusername
       "pass"     = var.configServerpass
+      "JAR_FILE" = var.jar_file
+      "APP_PORT" = var.appserviceport
+      "GIT_URI" = var.git_uri
+      "encrypt_key" = var.encrypt_key
     }
 
   }
