@@ -19,14 +19,18 @@ module "storagemodule" {
 
 module "configservermodule" {
   source = "./modules/configserver"
-  dns_name_label = var.dns_name_label
-  ip_address_type = var.ip_address_type
+  dns_name_label                  = var.dns_name_label
+  ip_address_type                 = var.ip_address_type
   configServercpu                 = var.cpu_cores
   configServermemory              = var.memory_in_gb
   configServerport                = var.configServerport
   configServerprotocol            = var.configServerprotocol
   configServerusername            = var.configServerusername
   configServerpass                = var.configServerpass
+  appserviceport                  = var.appserviceport
+  git_uri                         = var.git_uri
+  encrypt_key                     = var.encrypt_key
+  jar_file                        = var.jar_file
   docker_registry_server_password = var.docker_registry_server_password
   docker_registry_server_url      = var.docker_registry_server_url
   docker_registry_server_username = var.docker_registry_server_username
