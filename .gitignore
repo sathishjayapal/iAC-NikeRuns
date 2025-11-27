@@ -9,3 +9,6 @@ aws-modules/terraform.tfstate
 aws-modules/terraform.tfstate.backup
 
 terraform.tfstate
+/aws-modules/eks/.terraform.tfstate.lock.info
+/aws-modules/eks/terraform.tfstate.backup
+/terraform.tfstate.backup
