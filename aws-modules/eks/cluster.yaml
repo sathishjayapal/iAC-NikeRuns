@@ -3,18 +3,18 @@ kind: ClusterConfig
 
 metadata:
   name: eks-cluster-01
-  region: ap-southeast-1
+  region: us-east-1
 
 vpc:
-  id: "vpc-aaaa"
+  id: "vpc-0a1753e65db583cd6"
   subnets:
     public:
       apsoutheast1a:
-        id: subnet-xxxx
+        id: subnet-0ce25994763da6aae
       apsoutheast1b:
-        id: subnet-yyyy
+        id: subnet-0725627f1a0851e25
       apsoutheast1c:
-        id: subnet-zzzz
+        id: subnet-01a73f2ece83afd8d
 
 managedNodeGroups:
   - name: ng-1-workers
@@ -26,11 +26,11 @@ managedNodeGroups:
     maxSize: 4
     ssh:
       allow: true
-      publicKeyName: xxxx
+      publicKeyName: foreksworkloads
     tags:
       k8s.io/cluster-autoscaler/enabled: "true"
       k8s.io/cluster-autoscaler/eks-cluster-01: "owned"
 
 iam:
   withOIDC: true
-  serviceRoleARN: arn:aws:iam::xxxxxxxxx:role/EKSClusterServiceRole
+  serviceRoleARN: arn:aws:iam::381636780001:role/sathisheksclusterservicerole

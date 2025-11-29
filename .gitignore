@@ -12,3 +12,4 @@ terraform.tfstate
 /aws-modules/eks/.terraform.tfstate.lock.info
 /aws-modules/eks/terraform.tfstate.backup
 /terraform.tfstate.backup
+/aws-modules/eks/set-env-vars.sh
