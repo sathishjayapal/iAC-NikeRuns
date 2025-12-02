@@ -122,3 +122,19 @@ variable "node_group_tags" {
   type        = map(string)
   default     = {}
 }
+
+########################################
+# AWS Load Balancer Controller
+########################################
+
+variable "enable_aws_load_balancer_controller" {
+  description = "Enable AWS Load Balancer Controller"
+  type        = bool
+  default     = true
+}
+
+variable "aws_load_balancer_controller_version" {
+  description = "Version of AWS Load Balancer Controller Helm chart"
+  type        = string
+  default     = "1.6.2"
+}

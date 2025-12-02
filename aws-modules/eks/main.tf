@@ -6,11 +6,55 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "~> 2.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "~> 2.0"
+    }
   }
 }
 
 provider "aws" {
   region = var.region
+}
+
+provider "kubernetes" {
+  host                   = aws_eks_cluster.this.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    command     = "aws"
+    args = [
+      "eks",
+      "get-token",
+      "--cluster-name",
+      aws_eks_cluster.this.name,
+      "--region",
+      var.region
+    ]
+  }
+}
+
+provider "helm" {
+  kubernetes {
+    host                   = aws_eks_cluster.this.endpoint
+    cluster_ca_certificate = base64decode(aws_eks_cluster.this.certificate_authority[0].data)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      command     = "aws"
+      args = [
+        "eks",
+        "get-token",
+        "--cluster-name",
+        aws_eks_cluster.this.name,
+        "--region",
+        var.region
+      ]
+    }
+  }
 }
 
 ########################################
@@ -291,3 +335,130 @@ resource "aws_eks_addon" "kube_proxy" {
 # Note: metrics-server is NOT included
 # eksctl installs it but it fails (CREATE_FAILED status in eks-cluster-01)
 # The cluster works fine without it - it's optional for basic operations
+
+########################################
+# AWS Load Balancer Controller
+########################################
+
+# Get AWS account ID and OIDC provider URL
+data "aws_caller_identity" "current" {}
+
+locals {
+  oidc_provider_url = replace(aws_eks_cluster.this.identity[0].oidc[0].issuer, "https://", "")
+}
+
+# IAM Policy for AWS Load Balancer Controller
+resource "aws_iam_policy" "aws_load_balancer_controller" {
+  count       = var.enable_aws_load_balancer_controller ? 1 : 0
+  name        = "${var.cluster_name}-AWSLoadBalancerControllerIAMPolicy"
+  description = "IAM policy for AWS Load Balancer Controller"
+  policy      = file("${path.module}/aws-load-balancer-controller-iam-policy.json")
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.cluster_name}-aws-load-balancer-controller-policy"
+    }
+  )
+}
+
+# IAM Role for AWS Load Balancer Controller (IRSA)
+resource "aws_iam_role" "aws_load_balancer_controller" {
+  count = var.enable_aws_load_balancer_controller ? 1 : 0
+  name  = "${var.cluster_name}-aws-load-balancer-controller"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Federated = var.enable_oidc ? aws_iam_openid_connect_provider.cluster[0].arn : ""
+        }
+        Action = "sts:AssumeRoleWithWebIdentity"
+        Condition = {
+          StringEquals = {
+            "${local.oidc_provider_url}:aud" = "sts.amazonaws.com"
+            "${local.oidc_provider_url}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+          }
+        }
+      }
+    ]
+  })
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.cluster_name}-aws-load-balancer-controller-role"
+    }
+  )
+}
+
+# Attach the policy to the role
+resource "aws_iam_role_policy_attachment" "aws_load_balancer_controller" {
+  count      = var.enable_aws_load_balancer_controller ? 1 : 0
+  policy_arn = aws_iam_policy.aws_load_balancer_controller[0].arn
+  role       = aws_iam_role.aws_load_balancer_controller[0].name
+}
+
+# Kubernetes Service Account for AWS Load Balancer Controller
+resource "kubernetes_service_account" "aws_load_balancer_controller" {
+  count = var.enable_aws_load_balancer_controller ? 1 : 0
+
+  metadata {
+    name      = "aws-load-balancer-controller"
+    namespace = "kube-system"
+    labels = {
+      "app.kubernetes.io/name"      = "aws-load-balancer-controller"
+      "app.kubernetes.io/component" = "controller"
+    }
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.aws_load_balancer_controller[0].arn
+    }
+  }
+
+  depends_on = [
+    aws_eks_cluster.this,
+    aws_eks_node_group.workers
+  ]
+}
+
+# Deploy AWS Load Balancer Controller using Helm
+resource "helm_release" "aws_load_balancer_controller" {
+  count      = var.enable_aws_load_balancer_controller ? 1 : 0
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+  version    = var.aws_load_balancer_controller_version
+
+  set {
+    name  = "clusterName"
+    value = aws_eks_cluster.this.name
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = "aws-load-balancer-controller"
+  }
+
+  set {
+    name  = "region"
+    value = var.region
+  }
+
+  set {
+    name  = "vpcId"
+    value = var.vpc_id
+  }
+
+  depends_on = [
+    kubernetes_service_account.aws_load_balancer_controller,
+    aws_eks_node_group.workers
+  ]
+}
