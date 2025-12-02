@@ -19,7 +19,7 @@ vpc:
 managedNodeGroups:
   - name: ng-1-workers
     labels: { role: workers }
-    instanceType: t2.micro
+    instanceType: t3.small
     desiredCapacity: 2
     maxPodsPerNode: 100
     minSize: 1
