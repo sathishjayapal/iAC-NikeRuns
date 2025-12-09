@@ -1,0 +1,87 @@
+formatter: "markdown table"
+
+version: ""
+
+header-from: main.tf
+footer-from: ""
+
+recursive:
+  enabled: false
+  path: modules
+
+sections:
+  hide: []
+  show: []
+
+content: |-
+  {{ .Header }}
+
+  ## Usage
+
+  ```hcl
+  module "msk" {
+    source = "./aws-modules/kafka"
+
+    cluster_name = "my-kafka-cluster"
+    vpc_id       = module.vpc.vpc_id
+    subnet_ids   = module.vpc.subnet_ids
+    vpc_cidr     = "192.168.0.0/16"
+
+    kafka_version          = "3.5.1"
+    number_of_broker_nodes = 3
+    broker_instance_type   = "kafka.m5.large"
+
+    encryption_in_transit_client_broker = "TLS"
+    enable_iam_auth                     = true
+
+    topic_naming_prefix          = "myapp-"
+    consumer_group_naming_prefix = "cg-myapp-"
+
+    tags = {
+      Environment = "production"
+    }
+  }
+  ```
+
+  {{ .Requirements }}
+
+  {{ .Providers }}
+
+  {{ .Modules }}
+
+  {{ .Resources }}
+
+  {{ .Inputs }}
+
+  {{ .Outputs }}
+
+output:
+  file: ""
+  mode: inject
+  template: |-
+    <!-- BEGIN_TF_DOCS -->
+    {{ .Content }}
+    <!-- END_TF_DOCS -->
+
+output-values:
+  enabled: false
+  from: ""
+
+sort:
+  enabled: true
+  by: name
+
+settings:
+  anchor: true
+  color: true
+  default: true
+  description: false
+  escape: true
+  hide-empty: false
+  html: true
+  indent: 2
+  lockfile: true
+  read-comments: true
+  required: true
+  sensitive: true
+  type: true
