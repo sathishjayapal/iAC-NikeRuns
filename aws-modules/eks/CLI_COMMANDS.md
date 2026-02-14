@@ -354,3 +354,8 @@ aws iam get-role --role-name <cluster-name>-aws-load-balancer-controller
 - `aws-load-balancer-controller-iam-policy.json` - IAM policy document
 - `AWS_LOAD_BALANCER_CONTROLLER.md` - Comprehensive documentation
 - `DEPLOYMENT_STEPS.md` - Step-by-step deployment guide
+
+
+## Docker iximuiz labs
+
+- `docker run -t -i python:3-slim` - Run python shell
