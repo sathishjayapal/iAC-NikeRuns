@@ -1,0 +1,112 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    AWS RUNS-APP-DB - QUICK REFERENCE                         ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🚨 DELETION ISSUES - QUICK FIXES                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+Issue 1: SNS Topic Won't Delete
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Error: "SNS topic waiting for removal"
+
+  Fix:  ./quick-fix-sns.sh
+
+  Time: ~30 seconds
+
+Issue 2: RDS Cluster Deletion Protected
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Error: "Cannot delete protected Cluster, please disable deletion protection"
+
+  Fix:  ./fix-rds-deletion.sh
+
+  Time: 10-15 minutes
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📚 DOCUMENTATION FILES                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  README.md              Main documentation with examples
+  SOLUTION.md           Quick reference for both issues
+  RDS_DELETION_FIX.md   Detailed RDS deletion guide
+  CLEANUP_GUIDE.md      Complete cleanup procedures
+  NOTIFICATIONS.md      Budget notification setup
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🛠️  CLEANUP SCRIPTS                                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  SNS Issues:
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ quick-fix-sns.sh             Quick SNS subscription cleanup            │
+  │ cleanup-sns-topic.sh         Detailed SNS cleanup with policies        │
+  │ cleanup-budget-resources.py  Complete budget resources cleanup         │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  RDS Issues:
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ fix-rds-deletion.sh          RDS deletion fix (bash)                   │
+  │ fix-rds-deletion.py          RDS deletion fix (python, more features)  │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 💡 COMMON COMMANDS                                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Check RDS cluster status:
+  $ aws rds describe-db-clusters \
+      --db-cluster-identifier runs-app-prod-aurora-pg \
+      --region us-east-1
+
+  Check SNS topic subscriptions:
+  $ aws sns list-subscriptions-by-topic \
+      --topic-arn arn:aws:sns:us-east-1:ACCOUNT:runs-app-prod-db-budget-alerts \
+      --region us-east-1
+
+  Test with dry-run:
+  $ python3 fix-rds-deletion.py --dry-run
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 🔍 VERIFICATION                                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  After SNS cleanup - should return error:
+  $ aws sns get-topic-attributes \
+      --topic-arn arn:aws:sns:us-east-1:ACCOUNT:runs-app-prod-db-budget-alerts
+
+  After RDS cleanup - should return DBClusterNotFoundFault:
+  $ aws rds describe-db-clusters \
+      --db-cluster-identifier runs-app-prod-aurora-pg
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ ⚡ EMERGENCY COMMANDS                                                        │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Force disable RDS deletion protection:
+  $ aws rds modify-db-cluster \
+      --db-cluster-identifier runs-app-prod-aurora-pg \
+      --no-deletion-protection \
+      --apply-immediately \
+      --region us-east-1
+
+  Delete all SNS subscriptions:
+  $ aws sns list-subscriptions-by-topic \
+      --topic-arn arn:aws:sns:REGION:ACCOUNT:runs-app-prod-db-budget-alerts \
+      --region us-east-1 \
+      --query 'Subscriptions[*].SubscriptionArn' \
+      --output text | xargs -n1 aws sns unsubscribe --subscription-arn
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 📞 NEED HELP?                                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  1. Check SOLUTION.md for quick fixes
+  2. Check RDS_DELETION_FIX.md for detailed RDS guide
+  3. Check CLEANUP_GUIDE.md for comprehensive procedures
+  4. All scripts support --help flag
+
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  Location: /aws-modules/runs-app-db/                                        ║
+║  All scripts are executable and ready to run                                 ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
