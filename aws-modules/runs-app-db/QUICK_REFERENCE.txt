@@ -22,15 +22,34 @@ Issue 2: RDS Cluster Deletion Protected
 
   Time: 10-15 minutes
 
+Issue 3: VPC Cannot Be Deleted
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Error: "EC2VPC - vpc-0f67b69c39640293b - failed"
+
+  Fix:  ./fix-rds-deletion.sh  (step 1 - wait 10-15 min)
+        ./fix-vpc-deletion.sh vpc-0f67b69c39640293b  (step 2)
+
+  Time: 15-20 minutes total
+
+Issue 4: CloudWatch Anomaly Detector Stuck
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Error: "CloudWatchAnomalyDetector - Invocations - waiting for removal"
+
+  Fix:  ./fix-cloudwatch-anomaly-detector.sh
+
+  Time: ~1 minute
+
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ 📚 DOCUMENTATION FILES                                                       │
 └──────────────────────────────────────────────────────────────────────────────┘
 
-  README.md              Main documentation with examples
-  SOLUTION.md           Quick reference for both issues
-  RDS_DELETION_FIX.md   Detailed RDS deletion guide
-  CLEANUP_GUIDE.md      Complete cleanup procedures
-  NOTIFICATIONS.md      Budget notification setup
+  README.md                   Main documentation with examples
+  SOLUTION.md                Quick reference for all four issues
+  RDS_DELETION_FIX.md        Detailed RDS deletion guide
+  VPC_DELETION_FIX.md        Detailed VPC deletion guide
+  CLOUDWATCH_ANOMALY_FIX.md  CloudWatch anomaly detector guide
+  CLEANUP_GUIDE.md           Complete cleanup procedures
+  NOTIFICATIONS.md           Budget notification setup
 
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │ 🛠️  CLEANUP SCRIPTS                                                          │
@@ -47,6 +66,21 @@ Issue 2: RDS Cluster Deletion Protected
   ┌─────────────────────────────────────────────────────────────────────────┐
   │ fix-rds-deletion.sh          RDS deletion fix (bash)                   │
   │ fix-rds-deletion.py          RDS deletion fix (python, more features)  │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  VPC Issues:
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ fix-vpc-deletion.sh          VPC dependency cleanup for aws-nuke       │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  CloudWatch Issues:
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ fix-cloudwatch-anomaly-detector.sh  Delete anomaly detectors           │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+  All-in-One:
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │ complete-cleanup.sh          Run all cleanup scripts in order          │
   └─────────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────────────┐

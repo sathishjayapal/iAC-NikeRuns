@@ -161,6 +161,132 @@ Should return: `DBClusterNotFoundFault`
 
 ---
 
+## Issue 3: VPC Cannot Be Deleted
+
+### Problem
+```
+us-east-1 - EC2VPC - vpc-0f67b69c39640293b - [tag:Name: "sathish-eks-VPC"] - failed
+us-east-1 - EC2DHCPOption - dopt-ea048c90 - failed
+us-east-1 - CloudWatchAnomalyDetector - Invocations - waiting for removal
+```
+
+### Root Cause
+The VPC has **active dependencies** that must be removed first:
+- RDS cluster and instances using DB subnet groups
+- Security groups, subnets, route tables
+- Internet gateway attached
+- CloudWatch anomaly detectors
+- Hardcoded VPC ID in Terraform example
+
+### Quick Solution (Run This Now)
+
+```bash
+cd /Users/sathishjayapal/IdeaProjects/iAC-NikeRuns/aws-modules/runs-app-db
+
+# Step 1: Delete RDS resources first (if not done already)
+./fix-rds-deletion.sh
+
+# Wait 10-15 minutes for RDS deletion
+
+# Step 2: Clean up VPC dependencies
+./fix-vpc-deletion.sh vpc-0f67b69c39640293b
+```
+
+### What It Does
+1. Deletes RDS clusters and instances in the VPC
+2. Removes DB subnet groups
+3. Deletes security groups and their rules
+4. Removes subnets, route tables, internet gateways
+5. Prepares VPC for aws-nuke deletion
+
+### Order Matters!
+**You must delete in this order:**
+1. RDS (10-15 min)
+2. VPC dependencies (2-5 min)
+3. Re-run aws-nuke
+
+### CloudWatch Anomaly Detector
+This may need manual deletion:
+```bash
+aws cloudwatch delete-anomaly-detector \
+    --namespace AWS/Lambda \
+    --metric-name Invocations \
+    --stat Average \
+    --region us-east-1
+```
+
+### Verification
+```bash
+aws ec2 describe-vpcs \
+    --vpc-ids vpc-0f67b69c39640293b \
+    --region us-east-1
+```
+Should return: `InvalidVpcID.NotFound`
+
+📖 **See VPC_DELETION_FIX.md for detailed documentation**
+
+---
+
+## Issue 4: CloudWatch Anomaly Detector Stuck
+
+### Problem
+```
+us-east-1 - CloudWatchAnomalyDetector - Invocations - [MetricName: "Invocations"] - waiting for removal
+```
+
+### Root Cause
+CloudWatch Anomaly Detector was created for the Lambda function monitoring. This is likely associated with the `runs-app-prod-budget-shutdown` Lambda function.
+
+### Quick Solution (Run This Now)
+
+```bash
+cd /Users/sathishjayapal/IdeaProjects/iAC-NikeRuns/aws-modules/runs-app-db
+./fix-cloudwatch-anomaly-detector.sh
+```
+
+### Alternative: Manual Deletion
+
+```bash
+# Try the most common case
+aws cloudwatch delete-anomaly-detector \
+    --namespace AWS/Lambda \
+    --metric-name Invocations \
+    --stat Average \
+    --region us-east-1
+
+# If that fails, try with function dimension
+aws cloudwatch delete-anomaly-detector \
+    --namespace AWS/Lambda \
+    --metric-name Invocations \
+    --stat Average \
+    --dimensions Name=FunctionName,Value=runs-app-prod-budget-shutdown \
+    --region us-east-1
+```
+
+### Find Exact Parameters
+
+```bash
+# Get full details of all anomaly detectors
+aws cloudwatch describe-anomaly-detectors \
+    --region us-east-1 \
+    --output json > /tmp/anomaly-detectors.json
+
+# View them
+cat /tmp/anomaly-detectors.json | jq '.'
+```
+
+### Verification
+```bash
+aws cloudwatch describe-anomaly-detectors \
+    --region us-east-1 \
+    --query 'AnomalyDetectors | length'
+```
+Should return: `0`
+
+📖 **See CLOUDWATCH_ANOMALY_FIX.md for detailed documentation**
+
+---
+
 ## Summary of Files
 
 | File | Purpose |
@@ -168,8 +294,13 @@ Should return: `DBClusterNotFoundFault`
 | `quick-fix-sns.sh` | Fast SNS cleanup |
 | `fix-rds-deletion.sh` | RDS deletion fix (bash) |
 | `fix-rds-deletion.py` | RDS deletion fix (python) |
+| `fix-vpc-deletion.sh` | VPC cleanup for deletion |
+| `fix-cloudwatch-anomaly-detector.sh` | CloudWatch anomaly detector cleanup |
+| `complete-cleanup.sh` | Run all cleanups in correct order |
 | `cleanup-budget-resources.py` | Complete budget cleanup |
 | `RDS_DELETION_FIX.md` | RDS deletion detailed guide |
+| `VPC_DELETION_FIX.md` | VPC deletion detailed guide |
+| `CLOUDWATCH_ANOMALY_FIX.md` | CloudWatch anomaly detector guide |
 | `CLEANUP_GUIDE.md` | Full cleanup documentation |
 aws sns get-topic-attributes \
     --topic-arn arn:aws:sns:us-east-1:381636780001:runs-app-prod-db-budget-alerts \

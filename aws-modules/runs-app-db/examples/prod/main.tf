@@ -13,9 +13,36 @@ provider "aws" {
   region = "us-east-1"
 }
 
-# Data source to look up the VPC
+################################################################################
+# VPC and Subnet Data Sources
+#
+# IMPORTANT: This example uses dynamic VPC lookup by tags instead of hardcoded
+# IDs. This makes the code more flexible and prevents issues during cleanup.
+#
+# Benefits:
+#  - VPC can be recreated without changing this code
+#  - Works across multiple environments with same tags
+#  - Easier cleanup with aws-nuke or terraform destroy
+#
+# For production, consider using:
+#  - Remote state data sources
+#  - Terraform variables for VPC ID
+#  - Service discovery via tags
+################################################################################
+
+# Data source to look up the VPC by tags (more flexible than hardcoded ID)
+# This allows the VPC to be recreated without changing this code
 data "aws_vpc" "existing" {
-  id = "vpc-0f67b69c39640293b"  # Updated to the actual VPC ID from terraform state
+  # Option 1: Look up by tag (recommended)
+  tags = {
+    Name = "sathish-eks-VPC"
+  }
+
+  # Option 2: Uncomment to use hardcoded ID instead (NOT RECOMMENDED)
+  # id = "vpc-0f67b69c39640293b"
+
+  # Option 3: Use variable (best for reusability)
+  # id = var.vpc_id
 }
 
 # Data source to look up subnets in the VPC
