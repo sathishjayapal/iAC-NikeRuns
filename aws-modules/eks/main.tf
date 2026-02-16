@@ -18,7 +18,7 @@ terraform {
 }
 
 provider "aws" {
-  region = var.region
+  region = "us-east-1"
 }
 
 provider "kubernetes" {
@@ -62,15 +62,15 @@ provider "helm" {
 ########################################
 
 data "aws_subnet" "public_a" {
-  id = var.subnet_id_a
+  id = "subnet-0ce25994763da6aae"
 }
 
 data "aws_subnet" "public_b" {
-  id = var.subnet_id_b
+  id = "subnet-0725627f1a0851e25"
 }
 
 data "aws_subnet" "public_c" {
-  id = var.subnet_id_c
+  id = "subnet-01a73f2ece83afd8d"
 }
 
 ########################################
@@ -101,7 +101,7 @@ resource "aws_security_group" "control_plane" {
 resource "aws_security_group" "nodeport" {
   name        = "dotsky-nodeport-sg"
   description = "Security group for Kubernetes NodePort services (30000-32767)"
-  vpc_id      = var.vpc_id
+  vpc_id      = "vpc-0a1753e65db583cd6"
 
   ingress {
     description = "NodePort range for Kubernetes services"
@@ -122,7 +122,7 @@ resource "aws_security_group" "nodeport" {
   tags = merge(
     var.common_tags,
     {
-      Name = "dotsky-nodeport-sg"
+      Name = "${var.cluster_name}-nodeport-sg"
     }
   )
 }
@@ -132,9 +132,9 @@ resource "aws_security_group" "nodeport" {
 ########################################
 
 resource "aws_eks_cluster" "this" {
-  name     = var.cluster_name
-  role_arn = var.service_role_arn
-  version  = var.cluster_version
+  name     = "sathish-eks-cluster-01"
+  role_arn = "arn:aws:iam::381636780001:role/sathisheksclusterservicerole"
+  version  = "1.28"
 
   vpc_config {
     subnet_ids = [
@@ -168,7 +168,7 @@ resource "aws_iam_openid_connect_provider" "cluster" {
   tags = merge(
     var.common_tags,
     {
-      Name = "${var.cluster_name}-oidc-provider"
+      Name = var.cluster_name
     }
   )
 }
@@ -269,7 +269,7 @@ resource "aws_launch_template" "node_group" {
 
 resource "aws_eks_node_group" "workers" {
   cluster_name    = aws_eks_cluster.this.name
-  node_group_name = var.node_group_name
+  node_group_name = "ng-1-workers"
   node_role_arn   = aws_iam_role.node_group.arn
   subnet_ids = [
     data.aws_subnet.public_a.id,
@@ -278,11 +278,12 @@ resource "aws_eks_node_group" "workers" {
   ]
 
   instance_types = [var.node_instance_type]
+  capacity_type  = var.node_capacity_type
 
   scaling_config {
-    desired_size = var.node_desired_capacity
-    min_size     = var.node_min_size
-    max_size     = var.node_max_size
+    desired_size = 2
+    min_size     = 1
+    max_size     = 4
   }
 
   update_config {
@@ -295,11 +296,22 @@ resource "aws_eks_node_group" "workers" {
     version = "$Latest"
   }
 
-  labels = var.node_labels
+  remote_access {
+    ec2_ssh_key = "foreksworkloads"
+  }
+
+  labels = {
+    role = "workers"
+  }
 
   tags = merge(
     var.common_tags,
-    var.node_group_tags
+    var.node_group_tags,
+    {
+      Name                                            = "${var.cluster_name}-${var.node_group_name}"
+      "k8s.io/cluster-autoscaler/enabled"             = "true"
+      "k8s.io/cluster-autoscaler/${var.cluster_name}" = "owned"
+    }
   )
 
   depends_on = [
@@ -313,9 +325,8 @@ resource "aws_eks_node_group" "workers" {
 # EKS Addons (matching eksctl defaults)
 ########################################
 
-resource "aws_eks_addon" "vpc_cni" {
-  cluster_name = aws_eks_cluster.this.name
-  addon_name   = "vpc-cni"
+resource "aws_iam_role" "node_group" {
+  name = "${var.cluster_name}-node-group-role"
 
   depends_on = [aws_eks_cluster.this]
 }
@@ -335,6 +346,39 @@ resource "aws_eks_addon" "kube_proxy" {
 # Note: metrics-server is NOT included
 # eksctl installs it but it fails (CREATE_FAILED status in eks-cluster-01)
 # The cluster works fine without it - it's optional for basic operations
+
+resource "aws_launch_template" "node_group" {
+  name_prefix = "${var.cluster_name}-${var.node_group_name}-"
+  description = "Launch template for ${var.cluster_name} node group with NodePort security group"
+
+  key_name = var.ssh_key_name
+
+  vpc_security_group_ids = [
+    aws_security_group.nodeport.id
+  ]
+
+  user_data = var.max_pods_per_node != null ? base64encode(templatefile("${path.module}/userdata.sh.tpl", {
+    cluster_name      = var.cluster_name
+    max_pods_per_node = var.max_pods_per_node
+  })) : null
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = merge(
+      var.common_tags,
+      {
+        Name = "${var.cluster_name}-${var.node_group_name}-node"
+      }
+    )
+  }
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.cluster_name}-${var.node_group_name}-lt"
+    }
+  )
+}
 
 ########################################
 # AWS Load Balancer Controller
