@@ -1,0 +1,5 @@
+kubectl apply -f db-secrets.yaml
+kubectl apply -f db-pv.yaml
+kubectl apply -f db-vol.yaml
+kubectl apply -f db.yaml
+kubectl apply -f db-svc.yaml
