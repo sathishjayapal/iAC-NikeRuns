@@ -5,6 +5,14 @@
 #   aws ec2 describe-vpcs --query 'Vpcs[].{Id:VpcId,Tags:Tags}'
 #   aws ec2 describe-subnets --filters Name=vpc-id,Values=<vpc-id> \
 #     --query 'Subnets[].{Id:SubnetId,AZ:AvailabilityZone,Public:MapPublicIpOnLaunch}'
+#
+# Check which subnets are PRIVATE (no 0.0.0.0/0 -> igw- route):
+#   for sn in $(aws ec2 describe-subnets --filters Name=vpc-id,Values=<vpc-id> \
+#       --query 'Subnets[].SubnetId' --output text); do
+#     rt=$(aws ec2 describe-route-tables --filters Name=association.subnet-id,Values=$sn \
+#          --query 'RouteTables[0].Routes[?DestinationCidrBlock==`0.0.0.0/0`].GatewayId' --output text)
+#     echo "$sn -> default route: ${rt:-NONE (private)}"
+#   done
 
 region          = "us-east-1"
 cluster_name    = "nikeruns-sandbox"
@@ -12,11 +20,26 @@ cluster_version = "1.30"
 
 vpc_id = "vpc-xxxxxxxxxxxxxxxxx"
 
-# Must be at least 2 subnet IDs in DIFFERENT availability zones.
+# Pass any 2 subnets in DIFFERENT AZs from your VPC. These will be used for the
+# EKS control plane. When create_private_subnets = true (below), they may be
+# public; the module will add private subnets for Fargate workloads.
 subnet_ids = [
   "subnet-aaaaaaaaaaaaaaaaa",
   "subnet-bbbbbbbbbbbbbbbbb",
 ]
+
+# A Cloud Guru sandboxes usually expose only public subnets. EKS Fargate
+# requires private subnets, so set this to true to have the module add
+# 2 private subnets + 1 NAT gateway inside the existing VPC.
+#
+# Cost note: a NAT gateway costs ~$0.045/hr (~$1.08/day). Tear down with
+# `terraform destroy` when you're done with the sandbox session.
+create_private_subnets = true
+
+# CIDRs for the new private subnets. Defaults (172.31.200.0/24 + .201.0/24)
+# work for the AWS default VPC (172.31.0.0/16). Override if your sandbox VPC
+# uses a different range or if these collide with existing subnets.
+# private_subnet_cidrs = ["10.0.200.0/24", "10.0.201.0/24"]
 
 # Optional: tighten this to your IP/32 for stronger security.
 # public_access_cidrs = ["203.0.113.42/32"]

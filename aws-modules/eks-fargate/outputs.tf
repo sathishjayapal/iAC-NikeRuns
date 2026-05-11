@@ -29,6 +29,21 @@ output "fargate_pod_execution_role_arn" {
   value       = aws_iam_role.fargate_pod_execution.arn
 }
 
+output "fargate_subnet_ids" {
+  description = "Subnet IDs the Fargate profiles attach pods to (private when create_private_subnets=true, else the caller-supplied subnet_ids)."
+  value       = local.fargate_subnet_ids
+}
+
+output "private_subnet_ids" {
+  description = "IDs of the private subnets created by this module (empty when create_private_subnets=false)."
+  value       = aws_subnet.private[*].id
+}
+
+output "nat_gateway_id" {
+  description = "NAT gateway ID created by this module (empty when create_private_subnets=false)."
+  value       = try(aws_nat_gateway.this[0].id, "")
+}
+
 output "kubeconfig_command" {
   description = "Run this to update your local kubeconfig."
   value       = "aws eks update-kubeconfig --region ${var.region} --name ${aws_eks_cluster.this.name}"
