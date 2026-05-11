@@ -77,6 +77,12 @@ aws eks update-kubeconfig --region us-east-1 \
   --name $(terraform output -raw cluster_name)
 ```
 
+> **Always re-run `aws eks update-kubeconfig` after any `terraform apply`
+> that recreates the cluster (or after a fresh sandbox session).** EKS
+> assigns a new API endpoint hostname each time, and a stale kubeconfig
+> shows up as `dial tcp: lookup ...eks.amazonaws.com: no such host` on
+> every kubectl command. See troubleshooting below.
+
 ## Post-apply: patch CoreDNS to run on Fargate
 
 CoreDNS ships annotated for EC2 nodes. With no node group it stays Pending
@@ -89,7 +95,29 @@ kubectl rollout restart deployment coredns -n kube-system
 kubectl get pods -n kube-system -w
 ```
 
-Then proceed to `../k8s/README.md` for the application deploy steps.
+**Expect 2-4 minutes** before both CoreDNS pods reach `1/1 Running`.
+Fargate pods are slower to start than EC2 pods because each pod gets its
+own micro-VM (image pull happens after the VM boots). Pending for the
+first ~90 seconds is normal, not stuck.
+
+Success looks like:
+
+```
+NAME                       READY   STATUS    RESTARTS   AGE
+coredns-xxxxxxxxxx-aaaaa   1/1     Running   0          2m
+coredns-xxxxxxxxxx-bbbbb   1/1     Running   0          2m
+```
+
+Quick DNS sanity check (one-off pod, auto-deletes; takes ~60-90s to start):
+
+```bash
+kubectl run -it --rm dnstest --image=busybox:1.36 --restart=Never -- \
+  nslookup kubernetes.default
+```
+
+You should get an answer with the cluster IP. If yes, cluster networking
+is fully functional and you can proceed to `../k8s/README.md` for the
+application deploy steps.
 
 ## Teardown
 
@@ -107,8 +135,38 @@ left running in the sandbox.
 - **`InvalidParameterException: Subnet ... is not a private subnet`** on
   `terraform apply`: set `create_private_subnets = true` in tfvars and
   re-apply.
+
 - **`InvalidParameterException: CIDR ... overlaps with another subnet`** on
   `terraform apply`: your VPC already uses the default CIDRs. Override
   `private_subnet_cidrs` with two non-overlapping /24 ranges inside the
   VPC CIDR.
-- **CoreDNS Pending forever after apply**: run the patch above.
+
+- **CoreDNS Pending forever after apply**: run the patch above. If still
+  Pending after ~5 min, check `kubectl describe pod -n kube-system -l
+  k8s-app=kube-dns` for selector mismatches against the `fp-system`
+  Fargate profile (namespace must be `kube-system`).
+
+- **`dial tcp: lookup <hash>.gr7.<region>.eks.amazonaws.com: no such host`**
+  on every kubectl command: kubeconfig is stale (cluster was destroyed
+  and recreated, or you switched sandboxes). Triage with:
+  ```bash
+  aws eks describe-cluster --region us-east-1 --name nikeruns-sandbox \
+    >/dev/null 2>&1 \
+    && aws eks update-kubeconfig --region us-east-1 --name nikeruns-sandbox \
+    && kubectl cluster-info \
+    || echo "cluster does NOT exist - run terraform apply"
+  ```
+  If the cluster exists, the `update-kubeconfig` call rewrites your kube
+  context with the current endpoint and kubectl works again.
+
+- **`Warning  LoggingDisabled ... aws-logging configmap was not found`**
+  on every Fargate pod: harmless. It just means you haven't opted in to
+  shipping Fargate stdout/stderr to CloudWatch via the optional
+  `aws-logging` ConfigMap in `aws-observability` namespace. Pods run
+  fine without it. Add the ConfigMap later if/when you want the logs.
+
+- **`endpoint ... no such host` only from your laptop, but from another
+  machine it works**: check that you didn't tighten `public_access_cidrs`
+  to a stale IP. `aws eks describe-cluster --query
+  'cluster.resourcesVpcConfig.publicAccessCidrs'` shows the current
+  allow-list.
