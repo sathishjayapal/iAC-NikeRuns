@@ -21,13 +21,6 @@ data "aws_vpc" "this" {
   id = var.vpc_id
 }
 
-data "aws_subnets" "this" {
-  filter {
-    name   = "subnet-id"
-    values = var.subnet_ids
-  }
-}
-
 data "aws_subnet" "selected" {
   for_each = toset(var.subnet_ids)
   id       = each.value
@@ -35,6 +28,11 @@ data "aws_subnet" "selected" {
 
 locals {
   azs = distinct([for s in data.aws_subnet.selected : s.availability_zone])
+
+  # Fargate must attach to private subnets. When create_private_subnets=true,
+  # we use the subnets created in private-subnets.tf; otherwise we fall back
+  # to the caller-supplied subnet_ids (which must already be private).
+  fargate_subnet_ids = var.create_private_subnets ? aws_subnet.private[*].id : var.subnet_ids
 }
 
 resource "null_resource" "validate_az_count" {
@@ -72,7 +70,10 @@ resource "aws_eks_cluster" "this" {
   version  = var.cluster_version
 
   vpc_config {
-    subnet_ids              = var.subnet_ids
+    # The EKS control plane is fine on public subnets; only Fargate profiles
+    # need private subnets. We give the cluster both when we have them, to
+    # support load balancers + private workloads in future iterations.
+    subnet_ids              = var.create_private_subnets ? concat(var.subnet_ids, aws_subnet.private[*].id) : var.subnet_ids
     endpoint_public_access  = true
     endpoint_private_access = true
     public_access_cidrs     = var.public_access_cidrs
@@ -122,7 +123,7 @@ resource "aws_eks_fargate_profile" "system" {
   cluster_name           = aws_eks_cluster.this.name
   fargate_profile_name   = "fp-system"
   pod_execution_role_arn = aws_iam_role.fargate_pod_execution.arn
-  subnet_ids             = var.subnet_ids
+  subnet_ids             = local.fargate_subnet_ids
 
   selector {
     namespace = "kube-system"
@@ -130,6 +131,7 @@ resource "aws_eks_fargate_profile" "system" {
 
   depends_on = [
     aws_iam_role_policy_attachment.fargate_AmazonEKSFargatePodExecutionRolePolicy,
+    aws_route_table_association.private,
   ]
 }
 
@@ -137,7 +139,7 @@ resource "aws_eks_fargate_profile" "microservices" {
   cluster_name           = aws_eks_cluster.this.name
   fargate_profile_name   = "fp-microservices"
   pod_execution_role_arn = aws_iam_role.fargate_pod_execution.arn
-  subnet_ids             = var.subnet_ids
+  subnet_ids             = local.fargate_subnet_ids
 
   selector {
     namespace = "microservices"
@@ -145,5 +147,6 @@ resource "aws_eks_fargate_profile" "microservices" {
 
   depends_on = [
     aws_iam_role_policy_attachment.fargate_AmazonEKSFargatePodExecutionRolePolicy,
+    aws_route_table_association.private,
   ]
 }
