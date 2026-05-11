@@ -1,0 +1,161 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: eventstracker
+  namespace: microservices
+  labels:
+    app: eventstracker
+spec:
+  type: ClusterIP
+  selector:
+    app: eventstracker
+  ports:
+    - name: http
+      port: 9081
+      targetPort: 9081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eventstracker
+  namespace: microservices
+  labels:
+    app: eventstracker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eventstracker
+  template:
+    metadata:
+      labels:
+        app: eventstracker
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: wait-for-config-server
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for config-server /actuator/health to be UP..."
+              i=0
+              while [ $i -lt 60 ]; do
+                if wget -q -O - "http://config-server:8888/actuator/health" 2>/dev/null | grep -q '"UP"'; then
+                  echo "config-server is UP"
+                  exit 0
+                fi
+                echo "  not ready (attempt $i), sleeping 5s..."
+                i=$((i+1))
+                sleep 5
+              done
+              echo "Timed out waiting for config-server"
+              exit 1
+          resources:
+            requests:
+              cpu: 50m
+              memory: 32Mi
+            limits:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+      containers:
+        - name: eventstracker
+          # Replace <ACCOUNT> and <TAG> before applying.
+          image: REPLACE_WITH_ECR_URL/eventstracker:REPLACE_WITH_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9081
+          env:
+            - name: SERVER_PORT
+              value: "9081"
+            - name: SPRING_CLOUD_CONFIG_URI
+              value: "http://config-server:8888"
+            - name: SPRING_CLOUD_CONFIG_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: eventstracker-secret
+                  key: SPRING_CLOUD_CONFIG_USERNAME
+            - name: SPRING_CLOUD_CONFIG_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eventstracker-secret
+                  key: SPRING_CLOUD_CONFIG_PASSWORD
+            - name: EVENTS_TRACKER_DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: eventstracker-secret
+                  key: EVENTS_TRACKER_DB_URL
+            - name: EVENTS_TRACKER_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: eventstracker-secret
+                  key: EVENTS_TRACKER_DB_USER
+            - name: EVENTS_TRACKER_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eventstracker-secret
+                  key: EVENTS_TRACKER_DB_PASSWORD
+            - name: RABBITMQ_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: eventstracker-secret
+                  key: RABBITMQ_HOST
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: eventstracker-secret
+                  key: RABBITMQ_USERNAME
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: eventstracker-secret
+                  key: RABBITMQ_PASSWORD
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError"
+          resources:
+            requests:
+              cpu: 250m
+              memory: 768Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9081
+            initialDelaySeconds: 60
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 9081
+            initialDelaySeconds: 120
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}
