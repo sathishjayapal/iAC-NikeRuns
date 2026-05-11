@@ -1,0 +1,22 @@
+# Copy to terraform.tfvars and fill in values from your A Cloud Guru sandbox.
+#
+# Discover values:
+#   aws sts get-caller-identity
+#   aws ec2 describe-vpcs --query 'Vpcs[].{Id:VpcId,Tags:Tags}'
+#   aws ec2 describe-subnets --filters Name=vpc-id,Values=<vpc-id> \
+#     --query 'Subnets[].{Id:SubnetId,AZ:AvailabilityZone,Public:MapPublicIpOnLaunch}'
+
+region          = "us-east-1"
+cluster_name    = "nikeruns-sandbox"
+cluster_version = "1.30"
+
+vpc_id = "vpc-xxxxxxxxxxxxxxxxx"
+
+# Must be at least 2 subnet IDs in DIFFERENT availability zones.
+subnet_ids = [
+  "subnet-aaaaaaaaaaaaaaaaa",
+  "subnet-bbbbbbbbbbbbbbbbb",
+]
+
+# Optional: tighten this to your IP/32 for stronger security.
+# public_access_cidrs = ["203.0.113.42/32"]
