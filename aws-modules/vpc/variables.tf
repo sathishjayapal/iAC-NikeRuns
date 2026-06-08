@@ -33,3 +33,21 @@ variable "subnet03_cidr" {
   type        = string
   default     = "192.168.192.0/18"
 }
+
+########################################
+# Private Subnet CIDRs (for Aurora)
+# These subnets have no route to the internet.
+# Only reachable from inside the VPC.
+########################################
+
+variable "private_subnet01_cidr" {
+  description = "CIDR for private subnet 1 — Aurora and other internal resources"
+  type        = string
+  default     = "10.0.11.0/24"
+}
+
+variable "private_subnet02_cidr" {
+  description = "CIDR for private subnet 2 — Aurora and other internal resources"
+  type        = string
+  default     = "10.0.12.0/24"
+}
