@@ -1,70 +1,62 @@
-# This variable defines a prefix to be used for resources.
 variable "prefix" {
-type = string
-description = "prefix is the prefix to be used for resource."
+  type        = string
+  description = "Prefix used in resource names."
 }
 
-# This variable defines the main group name.
 variable "main_group_name" {
-type        = string
-description = "main_group_name is the main group name."
+  type        = string
+  description = "Main group name used in resource names."
 }
 
-# This variable defines the resource group name.
 variable "rg_name" {
-type        = string
-description = "rg_name is the resource group name."
+  type        = string
+  description = "Azure resource group name."
 }
 
-# This variable defines the primary location for resources.
 variable "primary_location" {
-type        = string
-description = "primary_location is the primary location."
-default     = "South Central US"
+  type        = string
+  description = "Azure region."
+  default     = "East US"
 }
 
-# This variable defines the SKU name for the resource.
+# ── Server sizing ─────────────────────────────────────────────────────────────
+# Default is Burstable B1ms: cheapest SKU, fine for ACG sandbox.
+# For better performance use: GP_Standard_D2s_v3
 variable "sku_name" {
-type    = string
-  description = "sku_name is the SKU name for the resource."
-default = "GP_Standard_D4s_v3"
+  type        = string
+  description = "PostgreSQL Flexible Server SKU name."
+  default     = "B_Standard_B1ms"
 }
 
-# This variable defines the storage size in megabytes.
 variable "storage_mb" {
-type    = number
-default = "32768"
-description = "storage_mb is the storage size in megabytes."
+  type        = number
+  description = "Storage size in megabytes."
+  default     = 32768
 }
 
-# This variable defines the number of days to retain backups.
 variable "backup_retention_days" {
-type    = number
-default = 7
-description = "backup_retention_days is the number of days to retain backups."
+  type        = number
+  description = "Number of days to retain backups."
+  default     = 7
 }
 
-# This variable defines the administrator login name.
+# ── Auth ──────────────────────────────────────────────────────────────────────
 variable "administrator_login" {
-type    = string
-default = "psqladmin"
-description = "administrator_login is the administrator login name."
+  type        = string
+  description = "PostgreSQL administrator login name."
+  default     = "psqladmin"
 }
 
-# This variable defines the administrator login password.
-# It is marked as sensitive to avoid exposing it in logs.
 variable "administrator_login_password" {
-type      = string
-sensitive = true
-default   = "psqladminpas$"
-description = "administrator_login_password is the administrator login password."
+  type        = string
+  sensitive   = true
+  description = "PostgreSQL administrator password. Pass via tfvars or TF_VAR_administrator_login_password — never hardcode."
 }
 
-# This variable defines the PostgreSQL version.
-# It is marked as sensitive to avoid exposing it in logs.
+# ── Version ───────────────────────────────────────────────────────────────────
+# Must be >= 13 for pgvector support on Azure Flexible Server.
 variable "postgresql_version" {
-type      = string
-sensitive = true
-default   = "12"
-description = "postgresql_version is the PostgreSQL version."
+  type        = string
+  description = "PostgreSQL major version. Minimum 13 for pgvector."
+  default     = "16"
 }

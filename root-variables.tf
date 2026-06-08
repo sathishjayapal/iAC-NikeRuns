@@ -207,3 +207,9 @@ variable "container_access_type" {
   nullable    = false
 }
 
+# ── PostgreSQL ────────────────────────────────────────────────────────────────
+variable "pg_admin_password" {
+  type        = string
+  sensitive   = true
+  description = "Administrator password for the shared PostgreSQL Flexible Server. Set in main.tfvars or via TF_VAR_pg_admin_password environment variable."
+}

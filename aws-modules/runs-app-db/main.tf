@@ -91,14 +91,17 @@ resource "aws_vpc_security_group_ingress_rule" "cidr" {
 # Ingress rules allowing PostgreSQL access from specified security groups
 # Enables database access from other AWS resources via security group association
 resource "aws_vpc_security_group_ingress_rule" "source_sg" {
-  for_each = toset(var.allowed_security_group_ids)
+  # Use count instead of for_each: count only needs the list length (known at
+  # plan time), whereas for_each needs the actual SG ID values as keys — which
+  # are unknown until the SSM relay EC2 security group is created.
+  count = length(var.allowed_security_group_ids)
 
   security_group_id            = aws_security_group.db.id
   ip_protocol                  = "tcp"
   from_port                    = var.db_port
   to_port                      = var.db_port
-  referenced_security_group_id = each.value
-  description                  = "PostgreSQL ${var.db_port} from security group ${each.value}"
+  referenced_security_group_id = var.allowed_security_group_ids[count.index]
+  description                  = "PostgreSQL ${var.db_port} from security group"
 }
 
 ################################################################################
