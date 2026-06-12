@@ -108,19 +108,16 @@ resource "aws_vpc_security_group_ingress_rule" "source_sg" {
 # Aurora PostgreSQL Database Cluster
 ################################################################################
 
-# Aurora PostgreSQL cluster with serverless v2 scaling
-# Provides auto-scaling database capacity based on workload demand
-# Features:
-#  - Encryption at rest enabled
-#  - Automated backups with configurable retention
-#  - CloudWatch log export for PostgreSQL logs
-#  - Storage encrypted for data at rest
-#  - Multi-AZ support for high availability
+# Aurora PostgreSQL Serverless v1
+# engine_mode = "serverless" avoids rds:CreateDBInstance entirely —
+# ACG SCP (p-cr6s9vs4) has an explicit deny on that action.
+# Serverless v1 auto-pauses after inactivity, keeping ACG costs near zero.
+# Limitation: max PostgreSQL 13.x (no pgvector) — use EC2 Docker for that.
 resource "aws_rds_cluster" "this" {
   cluster_identifier                  = local.cluster_identifier
   engine                              = "aurora-postgresql"
   engine_version                      = var.engine_version
-  engine_mode                         = "provisioned"
+  engine_mode                         = "serverless"
   db_subnet_group_name                = aws_db_subnet_group.this.name
   vpc_security_group_ids              = [aws_security_group.db.id]
   database_name                       = var.db_name
@@ -137,34 +134,20 @@ resource "aws_rds_cluster" "this" {
   enabled_cloudwatch_logs_exports     = ["postgresql"]
   iam_database_authentication_enabled = false
 
-  serverlessv2_scaling_configuration {
-    min_capacity = var.min_acu
-    max_capacity = var.max_acu
+  scaling_configuration {
+    min_capacity             = var.min_acu
+    max_capacity             = var.max_acu
+    auto_pause               = true
+    seconds_until_auto_pause = 300
   }
 
   tags = local.base_tags
 }
 
-# Aurora database instance - the primary (writer) instance in the cluster
-# Handles all read and write operations
-# Uses serverless compute for automatic scaling
-resource "aws_rds_cluster_instance" "writer" {
-  identifier           = "${var.name_prefix}-writer-1"
-  cluster_identifier   = aws_rds_cluster.this.id
-  instance_class       = "db.serverless"
-  engine               = aws_rds_cluster.this.engine
-  engine_version       = aws_rds_cluster.this.engine_version
-  db_subnet_group_name = aws_db_subnet_group.this.name
-  publicly_accessible  = false
-  apply_immediately    = var.apply_immediately
-
-  tags = merge(
-    local.base_tags,
-    {
-      Name = "${var.name_prefix}-writer-1"
-    }
-  )
-}
+# NOTE: No aws_rds_cluster_instance resource here.
+# Aurora Serverless v1 manages compute capacity automatically — no
+# rds:CreateDBInstance call is made, which is exactly why it works
+# in ACG sandboxes where that action is denied by SCP.
 
 ################################################################################
 # Secrets Management
