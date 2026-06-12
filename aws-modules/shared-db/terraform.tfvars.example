@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars — this file is gitignored.
+# Get AWS credentials from the ACG lab "AWS Details" tab.
+
+aws_region      = "us-east-1"
+name_prefix     = "sathish-shared"
+master_username = "sathishadmin"

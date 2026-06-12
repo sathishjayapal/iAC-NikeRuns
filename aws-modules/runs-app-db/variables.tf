@@ -42,9 +42,9 @@ variable "master_username" {
 }
 
 variable "engine_version" {
-  description = "Aurora PostgreSQL engine version"
+  description = "Aurora PostgreSQL engine version (Serverless v1 max: 13.x)"
   type        = string
-  default     = "16.4"
+  default     = "13.9"
 }
 
 variable "db_port" {
@@ -59,15 +59,15 @@ variable "db_port" {
 }
 
 variable "min_acu" {
-  description = "Minimum Aurora Serverless v2 capacity units"
+  description = "Minimum Aurora Serverless v1 capacity units (valid: 1,2,4,8,16,32,64)"
   type        = number
-  default     = 0.5
+  default     = 2
 }
 
 variable "max_acu" {
-  description = "Maximum Aurora Serverless v2 capacity units"
+  description = "Maximum Aurora Serverless v1 capacity units (valid: 2,4,8,16,32,64,192,384)"
   type        = number
-  default     = 1
+  default     = 8
   validation {
     condition     = var.max_acu >= var.min_acu
     error_message = "max_acu must be greater than or equal to min_acu."

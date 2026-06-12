@@ -53,10 +53,60 @@ module "loganalyticsmodule" {
 }
 module "flexipostgresmodule" {
   source  = "./modules/PostgreSQL"
-  primary_location = var.primary_location
-  rg_name = var.rg_name
-  prefix                          = var.prefix
-  main_group_name                 = var.main_group_name
+  primary_location             = var.primary_location
+  rg_name                      = var.rg_name
+  prefix                       = var.prefix
+  main_group_name              = var.main_group_name
+  administrator_login_password = var.pg_admin_password
+}
+
+# ── PostgreSQL root-level outputs (consumed by acg-start.sh) ─────────────────
+output "pg_host" {
+  value       = module.flexipostgresmodule.db_host
+  description = "PostgreSQL FQDN"
+}
+
+output "pg_port" {
+  value       = module.flexipostgresmodule.db_port
+  description = "PostgreSQL port"
+}
+
+output "pg_admin_user" {
+  value       = module.flexipostgresmodule.db_admin_user
+  description = "PostgreSQL admin login"
+}
+
+output "pg_admin_password" {
+  value       = module.flexipostgresmodule.db_admin_password
+  sensitive   = true
+  description = "PostgreSQL admin password"
+}
+
+output "jdbc_eventstracker" {
+  value     = module.flexipostgresmodule.jdbc_eventstracker
+  sensitive = true
+}
+
+output "jdbc_runsapp" {
+  value     = module.flexipostgresmodule.jdbc_runsapp
+  sensitive = true
+}
+
+output "jdbc_runsai" {
+  value     = module.flexipostgresmodule.jdbc_runsai
+  sensitive = true
+}
+
+output "db_name_eventstracker" {
+  value = module.flexipostgresmodule.db_name_eventstracker
+}
+
+output "db_name_runsapp" {
+  value = module.flexipostgresmodule.db_name_runsapp
+}
+
+output "db_name_runsai" {
+  value = module.flexipostgresmodule.db_name_runsai
 }
 module "eventgridmodule" {
   source = "./modules/eventgrid"

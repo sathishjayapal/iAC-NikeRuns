@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Pinned image tag — do NOT use :latest, which is mutable and can pull a build
+# with mismatched Spring Boot/Spring Cloud versions (causes a startup crash loop).
+# Bump this in lockstep with the Jib tag in the config-server pom.xml.
+CONFIG_SERVER_IMAGE="travelhelper0h/sathishproject-config-server:2025.0.2"
+
 # Update and install Docker + AWS CLI
 yum update -y
 yum install -y docker aws-cli
@@ -42,11 +47,11 @@ printf 'GIT_URI=%s\nencrypt_key=%s\nusername=%s\npass=%s\nAPP_PORT=8888\n' \
 unset GIT_URI ENCRYPT_KEY USERNAME PASS
 
 # Pull and run the config server container
-docker pull travelhelper0h/sathishproject-config-server:latest
+docker pull "$CONFIG_SERVER_IMAGE"
 
 docker run -d \
   --name config-server \
   --restart unless-stopped \
   -p 8888:8888 \
   --env-file /etc/config-server.env \
-  travelhelper0h/sathishproject-config-server:latest
+  "$CONFIG_SERVER_IMAGE"

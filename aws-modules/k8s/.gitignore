@@ -1,0 +1,3 @@
+secrets.actual.yaml
+secrets.env
+*.bak
