@@ -1,15 +1,6 @@
-# Copy to terraform.tfvars and fill in — this file is gitignored.
-# Get AWS credentials from your ACG lab's "Credentials" tab.
+# Copy to terraform.tfvars — this file is gitignored.
+# Get AWS credentials from the ACG lab "AWS Details" tab.
 
-aws_region   = "us-east-1"
-name_prefix  = "sathish-shared"
+aws_region      = "us-east-1"
+name_prefix     = "sathish-shared"
 master_username = "sathishadmin"
-
-# Budget guardrail: blocks DB access if monthly RDS cost exceeds this.
-# $10 is plenty for a few hours of Aurora Serverless v2 in an ACG session.
-enable_budget_guardrail  = true
-monthly_budget_limit_usd = 10
-
-# Optional: get email alerts before the guardrail triggers
-# alert_email_addresses = ["you@example.com"]
-alert_email_addresses = []
