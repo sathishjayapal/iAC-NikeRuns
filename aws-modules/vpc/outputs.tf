@@ -20,7 +20,17 @@ output "subnet_ids" {
   value       = local.all_subnet_ids
 }
 
+output "private_subnet_ids" {
+  description = "Private subnet IDs — use for Aurora and other internal resources"
+  value = [aws_subnet.private01.id, aws_subnet.private02.id]
+}
+
 output "security_groups" {
   description = "Security group for the cluster control plane communication with worker nodes"
   value       = [aws_security_group.control_plane.id]
+}
+
+output "internet_gateway_id" {
+  description = "Internet gateway ID"
+  value       = aws_internet_gateway.this.id
 }
