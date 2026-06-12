@@ -19,7 +19,4 @@ aws-modules/config-server/terraform.tfvars
 aws-modules/config-server/*.pem
 /aws-modules/config-server/terraform.tfvars.example
 
-aws-modules/shared-db/terraform.tfstate.backup
-aws-modules/shared-db/terraform.tfvars
-
 .DS_Store
