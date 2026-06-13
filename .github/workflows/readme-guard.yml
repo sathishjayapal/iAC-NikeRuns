@@ -1,0 +1,64 @@
+name: README Guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  require-readme-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate README update for infrastructure changes
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+
+          if [[ -z "${BASE_SHA}" || "${BASE_SHA}" =~ ^0+$ ]]; then
+            echo "No valid base SHA found (initial branch push). Skipping README guard."
+            exit 0
+          fi
+
+          CHANGED_FILES="$(git diff --name-only "${BASE_SHA}" "${HEAD_SHA}")"
+
+          if [[ -z "${CHANGED_FILES}" ]]; then
+            echo "No file changes detected."
+            exit 0
+          fi
+
+          IMPORTANT_PATTERN='\.tf$|\.tfvars\.example$|^aws-modules/.*\.(yaml|yml)$|^aws-modules/.*\.sh$'
+          README_PATTERN='^(README\.md|docs/diagrams/architecture\.puml)$'
+
+          IMPORTANT_CHANGED="$(echo "${CHANGED_FILES}" | grep -E "${IMPORTANT_PATTERN}" || true)"
+          README_CHANGED="$(echo "${CHANGED_FILES}" | grep -E "${README_PATTERN}" || true)"
+
+          if [[ -n "${IMPORTANT_CHANGED}" && -z "${README_CHANGED}" ]]; then
+            echo "Infrastructure files changed but README.md / architecture diagram was not updated."
+            echo
+            echo "Changed infrastructure files:"
+            echo "${IMPORTANT_CHANGED}"
+            echo
+            echo "Please update README.md (and docs/diagrams/architecture.puml if a module's"
+            echo "status or composition changed) to reflect the true current code state."
+            exit 1
+          fi
+
+          echo "README guard passed."

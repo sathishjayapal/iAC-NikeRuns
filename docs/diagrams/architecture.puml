@@ -1,0 +1,90 @@
+@startuml architecture
+!theme plain
+title iAC-NikeRuns — Code Status Diagram (aws-modules/ and modules/, as of 2026-06-11)
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam wrapWidth 220
+skinparam defaultTextAlignment center
+
+legend top left
+  <b>Status legend</b>
+  <back:#d4f7d4>active</back>     current code, last touched in the latest infra iteration
+  <back:#fff2cc>standalone</back> current code, applied independently of the active EKS/DB path
+  <back:#f5d6d6>legacy</back>     superseded, kept for reference / portfolio docs
+endlegend
+
+package "Azure Sandbox\n(root.tf + main.tfvars — one composed stack)" as Azure <<active>> #d4f7d4 {
+  component "Config Server\nACI :8888\nmodules/configserver" as ACI
+  database "PostgreSQL Flexible Server\nB_Standard_B1ms - PG16 - pgvector\nDBs: event-service, runsapp_db,\nruns_ai_analyzer_db\nmodules/PostgreSQL" as AzPG
+  component "Blob Storage\nmodules/storage" as Blob
+  component "Service Bus\nmodules/service-bus" as SB
+  component "Event Grid\nmodules/eventgrid" as EG
+  component "Log Analytics\nmodules/logs" as Logs
+
+  ACI ..> AzPG : JDBC
+  Blob ..> EG : storage events
+  ACI ..> Logs
+  AzPG ..> Logs
+}
+
+note bottom of Azure
+  modules/resource-groups exists but is NOT
+  referenced by root.tf — rg_name points at a
+  pre-existing ACG sandbox resource group instead.
+end note
+
+package "AWS — ACG Sandbox (aws-modules/)\neach module applied independently — no shared root" as AWS {
+
+  package "vpc\nupdated 2026-06-07" as VPC <<active>> #d4f7d4 {
+    component "VPC 10.0.0.0/16\n2-3 public subnets (ELB-tagged)\n2 private subnets (Aurora-tagged)" as VPCNet
+  }
+
+  package "shared-db\n2026-06-11 (newest)" as SharedDB <<active>> #d4f7d4 {
+    component "EC2 t3.micro\nDocker pgvector/pgvector:pg16\nDBs: runsapp_db, event-service,\nruns_ai_analyzer_db (+vector ext)" as PGDocker
+    component "3x VPC Interface Endpoints\nssm / ssmmessages / ec2messages" as SSMEndpoints
+    database "Secrets Manager\nshared master credentials" as SharedSecret
+  }
+  VPCNet <.. PGDocker : module "vpc"\nsource = "../vpc"
+  PGDocker ..> SSMEndpoints : SSM agent registration
+  PGDocker ..> SharedSecret
+
+  package "eks-fargate + k8s\n2026-05-10 (cluster bumped to 1.33 on 2026-06-11)" as Fargate <<active>> #d4f7d4 {
+    component "EKS Cluster 1.33\nOIDC - Fargate profiles\nfp-system, fp-microservices" as EKSF
+    component "Optional private subnets\n+ NAT GW\n(create_private_subnets)" as PrivSub
+    component "k8s manifests (kubectl apply)\nnamespace, networkpolicy,\nin-cluster postgres, rabbitmq,\nconfig-server, eventstracker" as K8sManifests
+  }
+  EKSF ..> K8sManifests : hosts on Fargate
+  EKSF ..> PrivSub : optional
+
+  package "runs-app-db\n2026-06-11" as RunsAppDB <<standalone>> #fff2cc {
+    database "Aurora PostgreSQL Serverless v1\nengine_mode=serverless - PG13.9\n2-8 ACU - auto-pause 300s" as Aurora
+    database "Secrets Manager\nmaster credentials" as AuroraSecret
+  }
+  Aurora ..> AuroraSecret
+  note bottom of RunsAppDB
+    Dodges rds:CreateDBInstance (SCP p-cr6s9vs4) via
+    Serverless v1. Capped at PG13 - no pgvector.
+    Alternative to shared-db, for runs-app's DB only.
+  end note
+
+  package "config-server\n2026-06-07" as ConfigServerEC2 <<standalone>> #fff2cc {
+    component "EC2 t3.micro\nSpring Cloud Config Server jar\n:8888 - own VPC/IGW/subnet" as CfgEC2
+    component "SSM Parameters\ngit_uri, encrypt_key,\nusername, pass (SecureString)" as SSMParams
+  }
+  CfgEC2 ..> SSMParams : read at boot
+
+  package "eks\n2026-02-15" as EKSLegacy <<legacy>> #f5d6d6 {
+    component "EKS Cluster 1.28\nManaged node group (t3.micro)\nOIDC/IRSA - AWS LB Controller (Helm)\nCoreDNS NOT an addon (account bug)" as EKSOld
+  }
+
+  package "kafka\n2025-12-08" as Kafka <<legacy>> #f5d6d6 {
+    component "MSK 3-broker cluster\nkafka.m5.large - IAM auth\nproducer/consumer/admin IAM roles" as MSK
+  }
+
+  package "main.tf / awsroot.tf\noriginal" as MainEC2 <<legacy>> #f5d6d6 {
+    component "EC2 t3.micro \"web\"\nal2023 - default VPC\nSG 80/8888/22 - key formypc" as WebEC2
+  }
+}
+
+@enduml
