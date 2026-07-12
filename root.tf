@@ -108,6 +108,24 @@ output "db_name_runsapp" {
 output "db_name_runsai" {
   value = module.flexipostgresmodule.db_name_runsai
 }
+
+output "jdbc_githubcleaner" {
+  value     = module.flexipostgresmodule.jdbc_githubcleaner
+  sensitive = true
+}
+
+output "jdbc_dbcleaner" {
+  value     = module.flexipostgresmodule.jdbc_dbcleaner
+  sensitive = true
+}
+
+output "db_name_githubcleaner" {
+  value = module.flexipostgresmodule.db_name_githubcleaner
+}
+
+output "db_name_dbcleaner" {
+  value = module.flexipostgresmodule.db_name_dbcleaner
+}
 module "eventgridmodule" {
   source = "./modules/eventgrid"
   rg-name = var.rg_name

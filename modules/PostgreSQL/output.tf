@@ -60,3 +60,23 @@ output "db_name_runsapp" {
 output "db_name_runsai" {
   value = azurerm_postgresql_flexible_server_database.runsai_db.name
 }
+
+output "jdbc_githubcleaner" {
+  description = "JDBC URL for verbose-barnacle (my-github-cleaner database)"
+  sensitive   = true
+  value       = "jdbc:postgresql://${azurerm_postgresql_flexible_server.sathishdb-server.fqdn}:5432/${azurerm_postgresql_flexible_server_database.githubcleaner_db.name}?sslmode=require"
+}
+
+output "jdbc_dbcleaner" {
+  description = "JDBC URL for dbcleaner (dbcleaner database)"
+  sensitive   = true
+  value       = "jdbc:postgresql://${azurerm_postgresql_flexible_server.sathishdb-server.fqdn}:5432/${azurerm_postgresql_flexible_server_database.dbcleaner_db.name}?sslmode=require"
+}
+
+output "db_name_githubcleaner" {
+  value = azurerm_postgresql_flexible_server_database.githubcleaner_db.name
+}
+
+output "db_name_dbcleaner" {
+  value = azurerm_postgresql_flexible_server_database.dbcleaner_db.name
+}
