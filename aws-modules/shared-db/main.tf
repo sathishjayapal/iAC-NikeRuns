@@ -227,6 +227,10 @@ resource "aws_instance" "ssm_relay" {
       -c 'CREATE DATABASE "event-service";'    2>&1 || true
     docker exec postgres-all psql -U ${var.master_username} -d postgres \
       -c "CREATE DATABASE runs_ai_analyzer_db;" 2>&1 || true
+    docker exec postgres-all psql -U ${var.master_username} -d postgres \
+      -c 'CREATE DATABASE "my-github-cleaner";' 2>&1 || true
+    docker exec postgres-all psql -U ${var.master_username} -d postgres \
+      -c "CREATE DATABASE dbcleaner;"           2>&1 || true
 
     log "Enabling pgvector extension..."
     docker exec postgres-all psql -U ${var.master_username} -d runs_ai_analyzer_db \

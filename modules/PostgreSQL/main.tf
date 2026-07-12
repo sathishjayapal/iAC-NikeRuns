@@ -72,3 +72,21 @@ resource "azurerm_postgresql_flexible_server_database" "runsai_db" {
 
   depends_on = [azurerm_postgresql_flexible_server_configuration.enable_pgvector]
 }
+
+resource "azurerm_postgresql_flexible_server_database" "githubcleaner_db" {
+  name      = "my-github-cleaner"
+  server_id = azurerm_postgresql_flexible_server.sathishdb-server.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+
+  depends_on = [azurerm_postgresql_flexible_server_configuration.enable_pgvector]
+}
+
+resource "azurerm_postgresql_flexible_server_database" "dbcleaner_db" {
+  name      = "dbcleaner"
+  server_id = azurerm_postgresql_flexible_server.sathishdb-server.id
+  charset   = "UTF8"
+  collation = "en_US.utf8"
+
+  depends_on = [azurerm_postgresql_flexible_server_configuration.enable_pgvector]
+}
