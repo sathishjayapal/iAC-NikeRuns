@@ -20,3 +20,13 @@ aws-modules/config-server/*.pem
 /aws-modules/config-server/terraform.tfvars.example
 
 .DS_Store
+
+# Terraform state can hold secrets (private keys, SSM values, passwords). Never commit it.
+**/terraform.tfstate
+**/terraform.tfstate.*
+*.tfstate
+*.tfstate.*
+
+# Variable files can hold secrets. Commit a *.tfvars.example instead.
+*.tfvars
+!*.tfvars.example
