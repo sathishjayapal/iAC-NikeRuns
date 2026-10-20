@@ -26,3 +26,7 @@ aws-modules/config-server/*.pem
 **/terraform.tfstate.*
 *.tfstate
 *.tfstate.*
+
+# Variable files can hold secrets. Commit a *.tfvars.example instead.
+*.tfvars
+!*.tfvars.example
