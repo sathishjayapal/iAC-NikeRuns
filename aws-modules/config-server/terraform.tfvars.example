@@ -1,0 +1,10 @@
+# Copy this to terraform.tfvars and fill in your values
+# terraform.tfvars is gitignored — never commit real secrets
+# allowed_ssh_cidr is auto-injected by deploy.sh — no need to set manually
+
+key_name         = "config-server-key"
+git_uri          = "https://github.com/your-org/your-config-repo"
+encrypt_key      = "your-encrypt-key"
+username         = "your-username"
+pass             = "your-password"
+allowed_ssh_cidr = "0.0.0.0/0"
