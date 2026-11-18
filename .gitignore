@@ -17,7 +17,6 @@ terraform.tfstate
 aws-modules/eks/terraform.tfvars
 aws-modules/config-server/terraform.tfvars
 aws-modules/config-server/*.pem
-/aws-modules/config-server/terraform.tfvars.example
 
 .DS_Store
 
