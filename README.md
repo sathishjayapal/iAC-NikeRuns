@@ -44,7 +44,7 @@ java -jar plantuml.jar -tpng -o docs/diagrams docs/diagrams/architecture.puml
 iAC-NikeRuns/
 ├── root.tf                    # Azure module declarations (one composed stack)
 ├── root-variables.tf          # Variable definitions for all Azure modules
-├── main.tfvars                # Environment-specific values (ACG sandbox)
+├── main.tfvars                # Environment-specific values (ACG sandbox) — gitignored, create locally
 │
 ├── docs/
 │   ├── adr/                   # Architecture Decision Records
@@ -103,6 +103,8 @@ iAC-NikeRuns/
 
 ### Required `main.tfvars` Values
 
+`main.tfvars` is **not tracked** (`*.tfvars` is gitignored because variable files can hold secrets). Create it locally at the repo root with these values:
+
 ```hcl
 tenant_id        = "<your-azure-tenant-id>"
 subscription_id  = "<your-azure-subscription-id>"
@@ -138,7 +140,7 @@ Every directory under `aws-modules/` is its own root module — `cd` into it and
 ### Azure (Sandbox)
 
 ```bash
-# From repo root
+# From repo root — create main.tfvars first (see "Required main.tfvars Values"; it is gitignored)
 terraform init
 terraform plan -var-file="main.tfvars"
 terraform apply -var-file="main.tfvars"
@@ -185,7 +187,7 @@ terraform apply
 
 ```bash
 cd aws-modules/config-server
-cp terraform.tfvars.example terraform.tfvars
+cp terraform.tfvars.example terraform.tfvars   # terraform.tfvars and *.tfstate* are gitignored — never commit them
 terraform init && terraform apply
 # or use the "config-server-deploy" Claude skill: ./deploy.sh
 ```
